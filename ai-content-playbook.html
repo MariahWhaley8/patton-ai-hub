@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Patton AI · Playbook — Build a Slack AI Assistant Over Your Own Data</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0F1516;      /* darkest */
+    --slate:#7F8C94;    /* slate blue-gray */
+    --mist:#C9C2C2;     /* light warm gray */
+    --teal:#234C58;     /* deep teal accent */
+    --taupe:#5E524B;    /* warm brown accent */
+    --paper:#F5F3F2;    /* near-white surface */
+    --line:#dcd8d6;
+    --serif:'Playfair Display',Georgia,'Times New Roman',serif;
+    --sans:'Inter',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;font-family:var(--sans);color:var(--ink);background:var(--paper);line-height:1.65;font-weight:400;font-size:17px;-webkit-font-smoothing:antialiased}
+  h1,h2,h3{font-family:var(--serif);font-weight:600;line-height:1.15;letter-spacing:.2px}
+  a{color:var(--teal);text-decoration:none}
+  a:hover{text-decoration:underline}
+  code{font-family:'SFMono-Regular',ui-monospace,Menlo,Consolas,monospace;font-size:.86em;background:#e9e5e3;color:var(--taupe);padding:.12em .4em;border-radius:5px}
+  pre{background:var(--ink);color:var(--mist);padding:20px 22px;border-radius:12px;overflow-x:auto;font-family:'SFMono-Regular',ui-monospace,Menlo,Consolas,monospace;font-size:13.5px;line-height:1.5;border:1px solid #1e2a2b}
+  pre code{background:none;color:inherit;padding:0}
+  .wrap{max-width:960px;margin:0 auto;padding:0 24px}
+
+  /* ---- top bar ---- */
+  header.bar{position:sticky;top:0;z-index:20;background:rgba(15,21,22,.96);backdrop-filter:blur(6px);border-bottom:1px solid #22302f}
+  .bar .wrap{display:flex;align-items:center;gap:14px;height:64px}
+  .bar .brand{display:flex;align-items:center;gap:12px}
+  .bar .logo{width:38px;height:38px;flex:0 0 auto}
+  .bar .word{font-family:var(--serif);color:#fff;font-size:20px;font-weight:700;letter-spacing:3px}
+  .bar .word span{color:var(--slate);font-weight:500}
+  .bar nav{margin-left:auto;display:flex;gap:22px}
+  .bar nav a{color:var(--mist);font-size:13.5px;letter-spacing:.5px;text-transform:uppercase}
+  .bar nav a:hover{color:#fff;text-decoration:none}
+  @media(max-width:720px){.bar nav{display:none}}
+
+  /* ---- hero ---- */
+  .hero{background:var(--ink);color:var(--mist);padding:72px 0 84px;position:relative;overflow:hidden}
+  .hero:before{content:"";position:absolute;inset:0;background:radial-gradient(1200px 400px at 80% -10%,rgba(35,76,88,.55),transparent 60%);pointer-events:none}
+  .hero .wrap{position:relative}
+  .hero .logo-lg{width:96px;height:96px;margin-bottom:26px}
+  .hero .kicker{color:var(--slate);letter-spacing:4px;text-transform:uppercase;font-size:12.5px;font-weight:600;margin:0 0 14px}
+  .hero h1{color:#fff;font-size:clamp(34px,5.5vw,58px);margin:0 0 18px;font-weight:700}
+  .hero p.lede{font-size:19px;max-width:660px;color:#cfd6d8;font-weight:300}
+  .hero .meta{margin-top:26px;display:flex;gap:10px;flex-wrap:wrap}
+  .hero .meta span{border:1px solid #33454a;color:var(--mist);padding:7px 14px;border-radius:999px;font-size:12.5px;letter-spacing:.4px}
+
+  /* ---- sections ---- */
+  section{padding:56px 0;border-bottom:1px solid var(--line)}
+  section:last-of-type{border-bottom:none}
+  .eyebrow{color:var(--teal);text-transform:uppercase;letter-spacing:3px;font-size:12px;font-weight:600;margin:0 0 8px}
+  h2{font-size:clamp(26px,3.6vw,36px);margin:0 0 8px}
+  h2 + .sub{color:var(--slate);margin:0 0 26px;font-size:16px}
+  h3{font-size:20px;margin:30px 0 8px;color:var(--ink)}
+  p{margin:0 0 16px}
+  ul,ol{margin:0 0 16px;padding-left:22px}
+  li{margin:6px 0}
+  .callout{background:#fff;border:1px solid var(--line);border-left:4px solid var(--taupe);border-radius:10px;padding:16px 18px;margin:18px 0;font-size:15.5px}
+  .callout.teal{border-left-color:var(--teal)}
+  .callout b{color:var(--taupe)}
+
+  /* palette strip */
+  .swatches{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 0}
+  .sw{flex:1 1 90px;border-radius:10px;height:76px;display:flex;align-items:flex-end;padding:8px;color:#fff;font-size:11px;letter-spacing:.5px;font-family:monospace;box-shadow:inset 0 0 0 1px rgba(0,0,0,.06)}
+
+  /* tables */
+  table{width:100%;border-collapse:collapse;margin:14px 0 8px;font-size:15px;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  th,td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:var(--ink);color:var(--mist);font-family:var(--sans);font-weight:600;font-size:13px;letter-spacing:.5px;text-transform:uppercase}
+  tr:last-child td{border-bottom:none}
+  td code{white-space:nowrap}
+
+  /* shareholder phase cards */
+  .phase{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:18px 0;position:relative}
+  .phase .ph-head{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+  .phase .num{width:34px;height:34px;border-radius:9px;background:var(--teal);color:#fff;font-family:var(--serif);font-weight:700;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+  .phase h3{margin:0;font-size:21px}
+  .phase .care{color:var(--taupe);font-size:14.5px;margin:10px 0 16px}
+  .phase .care b{color:var(--ink)}
+  .metrics{display:flex;gap:10px;flex-wrap:wrap}
+  .metric{flex:1 1 150px;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+  .metric .k{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--slate)}
+  .metric .v{font-size:15px;font-weight:600;margin-top:2px}
+  .bars{display:inline-flex;gap:3px;vertical-align:middle;margin-left:6px}
+  .bars i{width:7px;height:12px;border-radius:2px;background:var(--line);display:inline-block}
+  .bars i.on{background:var(--teal)}
+
+  /* checklist */
+  .check{list-style:none;padding:0}
+  .check li{padding-left:30px;position:relative;margin:8px 0}
+  .check li:before{content:"";position:absolute;left:0;top:3px;width:16px;height:16px;border:2px solid var(--teal);border-radius:4px}
+
+  footer{background:var(--ink);color:var(--slate);padding:36px 0;font-size:13.5px}
+  footer .wrap{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+  footer .logo{width:30px;height:30px}
+  footer b{color:var(--mist)}
+</style>
+</head>
+<body>
+
+<!-- ============ reusable logo (bold geometric bot mark, brand palette) ============ -->
+<svg width="0" height="0" style="position:absolute"><defs>
+  <symbol id="mark" viewBox="0 0 120 120">
+    <rect width="120" height="120" rx="28" fill="#0F1516"/>
+    <!-- head: light rounded form with an angular top-left cut -->
+    <rect x="30" y="30" width="60" height="60" rx="15" fill="#C9C2C2"/>
+    <path d="M30 30 L56 30 L30 56 Z" fill="#0F1516"/>
+    <!-- eyes -->
+    <circle cx="52" cy="66" r="6.4" fill="#0F1516"/>
+    <circle cx="72" cy="66" r="6.4" fill="#0F1516"/>
+    <!-- teal accent bar -->
+    <rect x="44" y="82" width="32" height="6" rx="3" fill="#234C58"/>
+  </symbol>
+</defs></svg>
+
+<header class="bar">
+  <div class="wrap">
+    <div class="brand">
+      <svg class="logo"><use href="#mark"/></svg>
+      <div class="word">PATTON&nbsp;AI<span> / PLAYBOOK</span></div>
+    </div>
+    <nav>
+      <a href="index.html">← Hub</a>
+      <a href="#build">Build</a>
+      <a href="#steps">Steps</a>
+      <a href="#shareholder">Shareholder View</a>
+      <a href="#pitfalls">Pitfalls</a>
+    </nav>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="wrap">
+    <svg class="logo-lg"><use href="#mark"/></svg>
+    <p class="kicker">Patton AI · Playbook Series</p>
+    <h1>Build a Slack AI Assistant Over Your Own Data</h1>
+    <p class="lede">A step-by-step guide to a Slack-native assistant that answers staff questions from your organization's own records and documents — and writes updates back. Hosted cheaply, accurate by design, and easy to maintain.</p>
+    <div class="meta">
+      <span>~Half a day to build</span>
+      <span>Managed, low-cost hosting</span>
+      <span>Hybrid SQL + vector retrieval</span>
+    </div>
+  </div>
+</div>
+
+<!-- ============ WHAT YOU'RE BUILDING ============ -->
+<section id="build"><div class="wrap">
+  <p class="eyebrow">Overview</p>
+  <h2>What you're building</h2>
+  <p class="sub">An assistant that lives in Slack and pulls from two stores you control.</p>
+
+  <pre><code>Slack  ──►  Assistant (Claude, tool-using agent)
+                │
+                ├─ search_records    → direct read-only SQL over synced data   (exact facts)
+                ├─ search_documents  → vector search over docs + notes         (context)
+                ├─ find_record       → resolve a name to a record id
+                ├─ update_record     → write changes back to the source system
+                └─ create_record     → create a new record (only after user confirms)
+        Postgres (with pgvector) stores both a structured mirror and the vectors.</code></pre>
+
+  <p>The design is a deliberate <b>hybrid</b>:</p>
+  <ul>
+    <li><b>Exact facts</b> (statuses, amounts, dates, counts) come from a <b>direct SQL query</b> against a synced mirror of your data — deterministic, no "closest guess."</li>
+    <li><b>Narrative / documents</b> use <b>semantic search</b> (embeddings + <code>pgvector</code>).</li>
+    <li>Only the data each question needs is pulled, and the static prompt is cached — so it's fast and cheap.</li>
+  </ul>
+
+  <h3>Brand palette</h3>
+  <div class="swatches">
+    <div class="sw" style="background:#0F1516">#0F1516</div>
+    <div class="sw" style="background:#7F8C94">#7F8C94</div>
+    <div class="sw" style="background:#C9C2C2;color:#0F1516">#C9C2C2</div>
+    <div class="sw" style="background:#234C58">#234C58</div>
+    <div class="sw" style="background:#5E524B">#5E524B</div>
+  </div>
+</div></section>
+
+<!-- ============ PREREQUISITES ============ -->
+<section><div class="wrap">
+  <p class="eyebrow">Before you start</p>
+  <h2>Accounts to create</h2>
+  <table>
+    <tr><th>Service</th><th>Why</th><th>What you copy out</th></tr>
+    <tr><td><b>Anthropic</b></td><td>The assistant's model</td><td><code>ANTHROPIC_API_KEY</code></td></tr>
+    <tr><td><b>Voyage AI</b></td><td>Document embeddings</td><td><code>VOYAGE_API_KEY</code></td></tr>
+    <tr><td><b>Slack</b> (workspace admin)</td><td>The chat interface</td><td>bot token, app-level token, signing secret</td></tr>
+    <tr><td><b>Railway</b></td><td>Hosts the bot + Postgres</td><td>provides <code>DATABASE_URL</code></td></tr>
+    <tr><td><b>Your data source</b></td><td>The records system</td><td>API key + API base URL</td></tr>
+    <tr><td><b>Google Cloud</b> <em>(optional)</em></td><td>Read a Drive folder of docs</td><td>service-account JSON + folder id</td></tr>
+    <tr><td><b>GitHub</b></td><td>Stores code, triggers deploys</td><td>the repo</td></tr>
+  </table>
+  <div class="callout teal"><b>Golden rule:</b> every secret goes into your host's environment variables — never into code or chat.</div>
+</div></section>
+
+<!-- ============ STEPS ============ -->
+<section id="steps"><div class="wrap">
+  <p class="eyebrow">Build it</p>
+  <h2>The steps</h2>
+
+  <h3>1 · Get API access to your data source</h3>
+  <p>Most low-code/records platforms expose a <b>REST API</b> where each record type is an "entity":</p>
+  <pre><code>GET/POST/PUT  https://&lt;host&gt;/api/apps/&lt;appId&gt;/entities/&lt;Entity&gt;
+Header:       api_key: &lt;YOUR_KEY&gt;   # some use Authorization: Bearer — check the docs</code></pre>
+  <p>Generate an API key, confirm which verbs work (GET/POST/PUT; some platforms don't support PATCH), and test a simple GET before writing code.</p>
+  <div class="callout"><b>Pitfall:</b> store <b>only the key value</b> — pasting a whole docs snippet into the token variable produces a malformed auth header and 403s.</div>
+
+  <h3>2 · Provision hosting + database</h3>
+  <ul>
+    <li>Create a Railway project and add <b>Postgres with the <code>pgvector</code> extension</b>.</li>
+    <li>Railway auto-provides <code>DATABASE_URL</code>.</li>
+    <li>Two stores: a <b>structured mirror</b> of your records (for SQL answers) and <b>documents + chunks</b> with a <code>vector(1024)</code> column and an HNSW index (for semantic search).</li>
+  </ul>
+  <div class="callout"><b>Pitfall:</b> create the <code>vector</code> extension on a plain connection <b>before</b> registering the pgvector adapter — otherwise the client can't find the type on first boot.</div>
+
+  <h3>3 · Model + embedding keys</h3>
+  <p><b>Anthropic:</b> create a key, set <code>ANTHROPIC_API_KEY</code> and a current model string. <b>Voyage AI:</b> create a key; use a domain-tuned model (e.g. <code>voyage-law-2</code>, 1024 dims) if it fits.</p>
+  <div class="callout"><b>Pitfall:</b> Voyage's free tier is rate-limited until you add a payment method — the large free token grant still applies, so bulk ingestion stays effectively free but no longer crawls.</div>
+
+  <h3>4 · Create the Slack app</h3>
+  <ol>
+    <li>Create the app (pasting an <b>App Manifest</b> with only the scopes/events below avoids "enterprise/admin-only" install errors).</li>
+    <li><b>Socket Mode → On</b>; generate an app-level token with <code>connections:write</code> (the <code>xapp-</code> token). No public URL needed.</li>
+    <li><b>Bot Token Scopes:</b> <code>app_mentions:read</code>, <code>chat:write</code>, <code>im:history</code>, <code>im:read</code>, <code>im:write</code>, <code>channels:history</code>, <code>channels:read</code>, <code>groups:history</code>, <code>groups:read</code>, <code>reactions:write</code>.</li>
+    <li><b>Event Subscriptions → bot events:</b> <code>app_mention</code>, <code>message.im</code>.</li>
+    <li><b>App Home → Messages Tab On</b>, and check "Allow users to send messages from the messages tab" (this is what lets people DM the bot).</li>
+    <li>Install the app; copy the <b>Bot User OAuth Token</b> (<code>xoxb-</code>) and the <b>Signing Secret</b>.</li>
+    <li>Set the app name, bot display name, and a <b>512–2000 px square PNG icon</b>.</li>
+  </ol>
+  <div class="callout"><b>Two pitfalls that will bite you:</b> after adding any scope later you must <b>Reinstall to Workspace</b> for the token to receive it; and the sidebar name comes from <b>App Home → Display Name</b> (renaming needs a reinstall + Slack reload).</div>
+
+  <h3>5 · (Optional) Google Drive document source</h3>
+  <ol>
+    <li>Enable the Drive API; create a <b>service account</b> and a <b>JSON key</b>.</li>
+    <li>Put the whole JSON into <code>GOOGLE_SERVICE_ACCOUNT_JSON</code>.</li>
+    <li><b>Share the target folder with the service account's email</b> — it only sees folders shared with it.</li>
+    <li>Set <code>GDRIVE_FOLDER_ID</code> to the <b>bare id</b> from the URL (after <code>/folders/</code>) — not the full URL.</li>
+  </ol>
+
+  <h3>6 · Build the app (key implementation notes)</h3>
+  <p>Modules: <code>config</code>, <code>db</code>, <code>embeddings</code>, <code>retrieval</code>, <code>tools</code>, <code>agent</code>, <code>slack_app</code>, <code>writeback</code>, and one <code>*_sync</code> per source. The parts that are easy to get wrong:</p>
+  <ul>
+    <li><b>Read-only SQL guard:</b> allow only a single <code>SELECT</code>/<code>WITH</code>, reject write keywords, and set <code>statement_timeout</code>.</li>
+    <li><b>Cast query embeddings:</b> send the vector as a text literal cast to <code>::vector</code> — a raw list is sent as a float array and errors.</li>
+    <li><b>Sanitize text</b> before storing/embedding (strip NUL/control chars — Postgres rejects <code>0x00</code>).</li>
+    <li><b>Tool loop:</b> call the model; on <code>tool_use</code> run tools, append results, loop (cap ~5–6). Prompt-cache the system prompt + tools.</li>
+    <li><b>Reactions:</b> add 👀 on receipt, swap to ✅ on success, ⚠️ on error (best-effort).</li>
+    <li><b>Thread memory:</b> pass prior thread messages so multi-turn flows work.</li>
+    <li><b>Write-back with a confirmation gate:</b> updates apply immediately; <b>creating a new record only after the user says yes</b> — enforced in the prompt <em>and</em> in the function.</li>
+    <li><b>Audit trail:</b> every write appends a timestamped note to the record and optionally posts to a log channel.</li>
+  </ul>
+
+  <h3>7 · Deploy</h3>
+  <p>Push to GitHub → <b>Deploy from GitHub repo</b> on Railway (set the service Root Directory if code is in a subfolder) → add all environment variables → Railway <b>auto-redeploys on every push</b>.</p>
+
+  <h3>8 · Load the data (ingestion)</h3>
+  <pre><code>python -m ingest.run_ingest all       # everything
+python -m ingest.run_ingest records    # structured mirror (no embeddings — load first)
+python -m ingest.run_ingest drive      # documents (incremental — skip already-indexed)
+python -m ingest.run_ingest chat       # chat history</code></pre>
+  <p>Make ingests idempotent and document ingests incremental; for long jobs run detached (<code>nohup … &amp;</code>) so a disconnect can't kill them.</p>
+
+  <h3>9 · Test</h3>
+  <p>Test the agent directly (a fact question + a document question), then in Slack: invite the bot, @mention it, DM it, confirm the 👀 → ✅ reactions, and verify write-back (update applies; create <b>asks first</b>).</p>
+</div></section>
+
+<!-- ============ SHAREHOLDER VIEW ============ -->
+<section id="shareholder" style="background:linear-gradient(180deg,#fff, var(--paper))"><div class="wrap">
+  <p class="eyebrow">Think like a shareholder</p>
+  <h2>What a shareholder actually cares about</h2>
+  <p class="sub">Across the lifecycle — with rough time, money, and skill for each phase.</p>
+
+  <p>A shareholder isn't buying "an AI bot." They're buying <b>return on a small, controllable investment</b>: faster staff, fewer mistakes, a predictable run-rate, and low risk. Frame every phase around ROI, risk, and cost predictability. The estimates below assume a small team and one capable builder; treat dollar figures as directional and verify current provider pricing.</p>
+
+  <!-- Phase 1 -->
+  <div class="phase">
+    <div class="ph-head"><div class="num">1</div><h3>Planning</h3></div>
+    <p>Define the use cases, the data sources, what "accurate" means, security requirements, and a simple success metric (e.g. hours saved per week). Resist scope creep — pick the 3–4 questions staff ask most.</p>
+    <p class="care"><b>Shareholder cares about:</b> a clear ROI thesis, tight scope, and risks named early (data privacy, accuracy, key-person dependency).</p>
+    <div class="metrics">
+      <div class="metric"><div class="k">Time</div><div class="v">1–2 weeks (part-time)</div></div>
+      <div class="metric"><div class="k">Money</div><div class="v">~$0 — mostly staff time</div></div>
+      <div class="metric"><div class="k">Skill<span class="bars"><i class="on"></i><i class="on"></i><i></i></span></div><div class="v">Business + light tech</div></div>
+    </div>
+  </div>
+
+  <!-- Phase 2 -->
+  <div class="phase">
+    <div class="ph-head"><div class="num">2</div><h3>Development</h3></div>
+    <p>Build the integrations and the assistant on <b>managed services</b> (don't run your own servers or database). Get a thin end-to-end slice working first — structured answers before document search.</p>
+    <p class="care"><b>Shareholder cares about:</b> cost control and not over-building — lean on hosted infra, ship an MVP, avoid custom infrastructure that creates maintenance debt.</p>
+    <div class="metrics">
+      <div class="metric"><div class="k">Time</div><div class="v">0.5–2 weeks to MVP</div></div>
+      <div class="metric"><div class="k">Money</div><div class="v">Low — dev time + &lt;$20/mo infra</div></div>
+      <div class="metric"><div class="k">Skill<span class="bars"><i class="on"></i><i class="on"></i><i class="on"></i></span></div><div class="v">Intermediate Python + cloud</div></div>
+    </div>
+  </div>
+
+  <!-- Phase 3 -->
+  <div class="phase">
+    <div class="ph-head"><div class="num">3</div><h3>Testing</h3></div>
+    <p>Verify accuracy against known answers, probe edge cases and security (read-only SQL, no data leaks), and confirm the write-back guardrails (updates log; new records require confirmation).</p>
+    <p class="care"><b>Shareholder cares about:</b> reliability and reputation — a wrong answer to a client-facing question is the real risk. Prove accuracy and that sensitive data stays contained.</p>
+    <div class="metrics">
+      <div class="metric"><div class="k">Time</div><div class="v">2–4 days</div></div>
+      <div class="metric"><div class="k">Money</div><div class="v">Low — minor usage costs</div></div>
+      <div class="metric"><div class="k">Skill<span class="bars"><i class="on"></i><i class="on"></i><i></i></span></div><div class="v">Intermediate + QA mindset</div></div>
+    </div>
+  </div>
+
+  <!-- Phase 4 -->
+  <div class="phase">
+    <div class="ph-head"><div class="num">4</div><h3>Deployment</h3></div>
+    <p>Go live on the managed host, connect Slack, load the data, invite the team, and set expectations for how to ask good questions.</p>
+    <p class="care"><b>Shareholder cares about:</b> uptime, adoption, and a smooth rollout — the investment only pays off if staff actually use it. Watch first-week usage.</p>
+    <div class="metrics">
+      <div class="metric"><div class="k">Time</div><div class="v">1–2 days</div></div>
+      <div class="metric"><div class="k">Money</div><div class="v">~$5–20/mo hosting + usage</div></div>
+      <div class="metric"><div class="k">Skill<span class="bars"><i class="on"></i><i></i><i></i></span></div><div class="v">Basic dashboard/devops</div></div>
+    </div>
+  </div>
+
+  <!-- Phase 5 -->
+  <div class="phase">
+    <div class="ph-head"><div class="num">5</div><h3>Continuous Maintenance</h3></div>
+    <p>Refresh data on a schedule, watch usage/costs, rotate keys, and add channels or tune the model as needs grow. Keep a short runbook so it isn't one person's secret.</p>
+    <p class="care"><b>Shareholder cares about:</b> a <b>predictable run-rate</b>, low key-person risk (documented, not tribal knowledge), and a clean security posture. Costs should scale gently with usage.</p>
+    <div class="metrics">
+      <div class="metric"><div class="k">Time</div><div class="v">~2–4 hrs / month</div></div>
+      <div class="metric"><div class="k">Money</div><div class="v">Often &lt;$50–100/mo for a small team*</div></div>
+      <div class="metric"><div class="k">Skill<span class="bars"><i class="on"></i><i></i><i></i></span></div><div class="v">Light ongoing</div></div>
+    </div>
+  </div>
+
+  <h3>At a glance</h3>
+  <table>
+    <tr><th>Phase</th><th>Time</th><th>Money</th><th>Skill</th><th>Shareholder headline</th></tr>
+    <tr><td>Planning</td><td>1–2 wks p/t</td><td>~$0</td><td>Low–Med</td><td>Clear ROI, tight scope</td></tr>
+    <tr><td>Development</td><td>0.5–2 wks</td><td>Low</td><td>Medium</td><td>Lean, managed, no over-build</td></tr>
+    <tr><td>Testing</td><td>2–4 days</td><td>Low</td><td>Low–Med</td><td>Accuracy = reputation</td></tr>
+    <tr><td>Deployment</td><td>1–2 days</td><td>$5–20/mo</td><td>Low</td><td>Adoption &amp; uptime</td></tr>
+    <tr><td>Maintenance</td><td>2–4 hrs/mo</td><td>&lt;$50–100/mo*</td><td>Low</td><td>Predictable run-rate, low risk</td></tr>
+  </table>
+  <div class="callout"><b>*</b> Directional only. Hosting is typically a few dollars a month; model and embedding usage are pay-as-you-go and small for Q&amp;A-style workloads (embeddings are mostly a one-time ingest cost). Always confirm current provider pricing before committing a budget.</div>
+</div></section>
+
+<!-- ============ PITFALLS ============ -->
+<section id="pitfalls"><div class="wrap">
+  <p class="eyebrow">Don't repeat these</p>
+  <h2>Pitfalls checklist</h2>
+  <ul class="check">
+    <li>Token variable holds <b>only</b> the key — no extra text.</li>
+    <li><code>pgvector</code> extension created <b>before</b> registering the vector adapter.</li>
+    <li>Query embeddings <b>cast to <code>::vector</code></b> in SQL.</li>
+    <li>Text <b>sanitized</b> (NUL/control chars) before insert/embed.</li>
+    <li>Per-file ingest wrapped in try/except so one bad file doesn't abort the batch.</li>
+    <li>Embedding provider <b>payment method added</b> to lift the free-tier rate limit.</li>
+    <li>Slack scope changes followed by a <b>reinstall</b>.</li>
+    <li>Folder id is the <b>bare id</b>, not the full URL.</li>
+    <li>On host AI/agent panels, don't type shell commands into an "agent" box — use the real <b>Console/shell</b>.</li>
+  </ul>
+
+  <h3>Security</h3>
+  <ul>
+    <li>Keep <b>all</b> secrets in host environment variables only.</li>
+    <li><b>Rotate</b> any key ever pasted outside the host (screenshots, logs, chat).</li>
+    <li>The SQL tool must be <b>read-only, single-statement</b>; writes go only through explicit functions.</li>
+    <li>Limit which channels the bot is invited to — it can read and answer from their history.</li>
+    <li>Instruct the assistant to answer only from retrieved data, never invent facts, and flag anything needing professional review.</li>
+  </ul>
+</div></section>
+
+<footer><div class="wrap">
+  <svg class="logo"><use href="#mark"/></svg>
+  <div><b>PATTON&nbsp;AI — Playbook Series.</b> Build a Slack AI assistant over your own data.<br>
+  Internal reference · v1.0 · © 2026 · All rights reserved.</div>
+</div></footer>
+
+</body>
+</html>

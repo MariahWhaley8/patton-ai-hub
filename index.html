@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Patton AI — Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0F1516;--slate:#7F8C94;--mist:#C9C2C2;--teal:#234C58;--taupe:#5E524B;
+    --paper:#F5F3F2;--line:#dcd8d6;
+    --serif:'Playfair Display',Georgia,serif;--sans:'Inter',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:var(--sans);color:var(--ink);background:var(--paper);line-height:1.6;font-size:17px;-webkit-font-smoothing:antialiased}
+  h1,h2,h3{font-family:var(--serif);font-weight:600;line-height:1.14}
+  a{text-decoration:none;color:inherit}
+  .wrap{max-width:1040px;margin:0 auto;padding:0 24px}
+
+  header.bar{background:var(--ink);border-bottom:1px solid #22302f}
+  .bar .wrap{display:flex;align-items:center;gap:14px;height:66px}
+  .bar .logo{width:40px;height:40px}
+  .bar .word{font-family:var(--serif);color:#fff;font-size:21px;font-weight:700;letter-spacing:3px}
+  .bar .word span{color:var(--slate);font-weight:500}
+  .bar .tagline{margin-left:auto;color:var(--slate);font-size:12.5px;letter-spacing:.5px;text-transform:uppercase}
+  @media(max-width:640px){.bar .tagline{display:none}}
+
+  .hero{background:var(--ink);color:var(--mist);padding:70px 0 84px;position:relative;overflow:hidden;text-align:center}
+  .hero:before{content:"";position:absolute;inset:0;background:radial-gradient(900px 360px at 50% -20%,rgba(35,76,88,.55),transparent 62%)}
+  .hero .wrap{position:relative}
+  .hero .logo-lg{width:104px;height:104px;margin-bottom:22px}
+  .hero .kicker{color:var(--slate);letter-spacing:5px;text-transform:uppercase;font-size:12.5px;font-weight:600;margin:0 0 12px}
+  .hero h1{color:#fff;font-size:clamp(38px,6vw,64px);margin:0 0 16px;font-weight:700}
+  .hero p{font-size:19px;max-width:640px;margin:0 auto;color:#cfd6d8;font-weight:300}
+
+  .grid-sec{padding:56px 0 20px}
+  .eyebrow{color:var(--teal);text-transform:uppercase;letter-spacing:3px;font-size:12px;font-weight:600;margin:0 0 6px;text-align:center}
+  .grid-sec h2{text-align:center;font-size:30px;margin:0 0 34px}
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}
+  @media(max-width:720px){.grid{grid-template-columns:1fr}}
+
+  .card{display:block;background:#fff;border:1px solid var(--line);border-radius:16px;padding:26px 26px 24px;transition:transform .15s ease,box-shadow .15s ease,border-color .15s ease;position:relative;overflow:hidden}
+  .card:hover{transform:translateY(-3px);box-shadow:0 14px 34px rgba(15,21,22,.10);border-color:var(--teal)}
+  .card .ic{width:44px;height:44px;border-radius:11px;background:var(--ink);display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+  .card .ic svg{width:24px;height:24px;stroke:var(--mist);fill:none;stroke-width:1.7}
+  .card .series{font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:600;color:var(--teal);margin-bottom:6px}
+  .card h3{font-size:23px;margin:0 0 8px}
+  .card p{margin:0 0 14px;color:#4a5359;font-size:15px}
+  .card .go{font-size:13.5px;font-weight:600;color:var(--teal);letter-spacing:.3px}
+  .card .go:after{content:" \2192"}
+  .card.soon{opacity:.62}
+  .card.soon:hover{transform:none;box-shadow:none;border-color:var(--line)}
+  .card.soon .series{color:var(--slate)}
+  .card.soon .go{color:var(--slate)}
+  .card .badge{position:absolute;top:18px;right:18px;font-size:10.5px;letter-spacing:1px;text-transform:uppercase;color:var(--slate);border:1px solid var(--line);border-radius:999px;padding:3px 9px}
+
+  .note{max-width:1040px;margin:26px auto 0;padding:0 24px}
+  .note div{background:#fff;border:1px solid var(--line);border-left:4px solid var(--taupe);border-radius:10px;padding:14px 18px;font-size:14.5px;color:#4a5359}
+
+  footer{background:var(--ink);color:var(--slate);padding:34px 0;font-size:13px;margin-top:52px}
+  footer .wrap{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+  footer .logo{width:30px;height:30px}
+  footer b{color:var(--mist)}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute"><defs>
+  <symbol id="mark" viewBox="0 0 120 120">
+    <rect width="120" height="120" rx="28" fill="#0F1516"/>
+    <rect x="30" y="30" width="60" height="60" rx="15" fill="#C9C2C2"/>
+    <path d="M30 30 L56 30 L30 56 Z" fill="#0F1516"/>
+    <circle cx="52" cy="66" r="6.4" fill="#0F1516"/>
+    <circle cx="72" cy="66" r="6.4" fill="#0F1516"/>
+    <rect x="44" y="82" width="32" height="6" rx="3" fill="#234C58"/>
+  </symbol>
+</defs></svg>
+
+<header class="bar"><div class="wrap">
+  <svg class="logo"><use href="#mark"/></svg>
+  <div class="word">PATTON&nbsp;AI<span> / HUB</span></div>
+  <div class="tagline">Patton Logistics Family of Companies</div>
+</div></header>
+
+<div class="hero"><div class="wrap">
+  <svg class="logo-lg"><use href="#mark"/></svg>
+  <p class="kicker">The Patton Logistics Family of Companies</p>
+  <h1>Patton AI</h1>
+  <p>One place for everything we build with AI — the methods we follow, the systems we run, the standards we hold, and the assistants live across the family.</p>
+</div></div>
+
+<section class="grid-sec"><div class="wrap">
+  <p class="eyebrow">Browse the hub</p>
+  <h2>Where do you want to go?</h2>
+  <div class="grid">
+
+    <a class="card" href="ai-content-playbook.html">
+      <div class="ic"><svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h9l5 5v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/><path d="M14 3v6h6"/><path d="M8 13h8M8 17h5"/></svg></div>
+      <div class="series">Series · Playbooks</div>
+      <h3>Playbooks</h3>
+      <p>Reusable, step-by-step methods for building AI — like standing up a Slack assistant over your own data. How we do it, every time.</p>
+      <span class="go">Open Playbooks</span>
+    </a>
+
+    <a class="card" href="patton-ai-runbook.html">
+      <div class="ic"><svg viewBox="0 0 24 24"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/><circle cx="12" cy="12" r="3.2"/></svg></div>
+      <div class="series">Series · Runbooks</div>
+      <h3>Runbooks</h3>
+      <p>How to operate and maintain each live system — configuration, keys, data refresh, and recovery for deployed solutions like Amicus.</p>
+      <span class="go">Open Runbooks</span>
+    </a>
+
+    <a class="card" href="patton-ai-tech-stack-standard.html">
+      <div class="ic"><svg viewBox="0 0 24 24"><path d="M12 3 4 7l8 4 8-4-8-4Z"/><path d="M4 12l8 4 8-4"/><path d="M4 17l8 4 8-4"/></svg></div>
+      <div class="series">Series · Standards</div>
+      <h3>Standards &amp; Tech</h3>
+      <p>The governance layer: our approved, cost-efficient tech stack with a SOC 2 review on every tool, plus security and data rules that apply family-wide.</p>
+      <span class="go">Open Standards</span>
+    </a>
+
+    <a class="card" href="patton-ai-runbook.html">
+      <div class="ic"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="9.5" cy="11" r="1.4" fill="currentColor" stroke="none"/><circle cx="14.5" cy="11" r="1.4" fill="currentColor" stroke="none"/><path d="M9 15.5h6"/></svg></div>
+      <div class="series">Series · Solutions</div>
+      <h3>Solutions &amp; Agents</h3>
+      <p>What's live across the family. First up: <b>Amicus</b>, the Slack assistant that answers from our case data and documents and writes updates back.</p>
+      <span class="go">Meet Amicus</span>
+    </a>
+
+    <div class="card soon">
+      <span class="badge">Coming soon</span>
+      <div class="ic"><svg viewBox="0 0 24 24"><path d="M3 20l4-1 10-10-3-3L4 16l-1 4Z"/><path d="M14 6l3 3"/></svg></div>
+      <div class="series">Series · Strategy</div>
+      <h3>Strategy</h3>
+      <p>The AI roadmap and portfolio view for the family — priorities, sequencing, and where we invest next.</p>
+      <span class="go">In progress</span>
+    </div>
+
+    <div class="card soon">
+      <span class="badge">Coming soon</span>
+      <div class="ic"><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M8 16v-5M12 16V8M16 16v-3"/></svg></div>
+      <div class="series">Series · Case Studies</div>
+      <h3>Case Studies</h3>
+      <p>Outcomes and ROI from what we've shipped — the shareholder view of time, cost, and results.</p>
+      <span class="go">In progress</span>
+    </div>
+
+  </div>
+</div></section>
+
+<div class="note"><div>
+  <b>How to use this hub:</b> each card opens a section. New assets are added under the matching series and always carry the same look, so anything from Patton AI is instantly recognizable.
+</div></div>
+
+<footer><div class="wrap">
+  <svg class="logo"><use href="#mark"/></svg>
+  <div><b>PATTON&nbsp;AI</b> — the AI hub for the Patton Logistics Family of Companies.<br>Internal · © 2026 · All rights reserved.</div>
+</div></footer>
+
+</body>
+</html>
